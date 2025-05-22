@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-$conn = new mysqli("mydemosvraz.database.windows.net", "wiproadmin", "Server@1", "mydemodb");
+$conn = new mysqli("mydemosvraz.database.windows.net", "wiproadmin", "Server@1", "mydemodb", 3306, NULL, MYSQLI_CLIENT_SSL);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
