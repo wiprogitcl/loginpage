@@ -1,24 +1,35 @@
 <?php
 session_start();
 
-$conn = new mysqli("mydemosvraz.database.windows.net", "wiproadmin", "Server@1", "mydemodb", 3306, NULL, MYSQLI_CLIENT_SSL);
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+$serverName = "tcp:mydemosvraz.database.windows.net,1433";
+$connectionOptions = array(
+    "Database" => "wiproadmin",
+    "Uid" => "wiproadmin",
+    "PWD" => "Server@1",
+    "Encrypt" => true,
+    "TrustServerCertificate" => false,
+    "LoginTimeout" => 30
+);
+
+// Connect using SQLSRV
+$conn = sqlsrv_connect($serverName, $connectionOptions);
+if ($conn === false) {
+    die(print_r(sqlsrv_errors(), true));
 }
 
-// Initialize variables to avoid undefined variable warnings
 $login_msg = "";
 $signup_msg = "";
 
-// LOGIN FORM PROCESSING
+// LOGIN
 if (isset($_POST['login'])) {
     $username = $_POST['login_username'];
-    $password = md5($_POST['login_password']); // MD5 for demo
+    $password = md5($_POST['login_password']);
 
-    $sql = "SELECT * FROM users WHERE username='$username' AND password='$password'";
-    $result = $conn->query($sql);
+    $sql = "SELECT * FROM users WHERE username=? AND password=?";
+    $params = array($username, $password);
+    $stmt = sqlsrv_query($conn, $sql, $params);
 
-    if ($result && $result->num_rows == 1) {
+    if ($stmt && sqlsrv_has_rows($stmt)) {
         $_SESSION['username'] = $username;
         header("Location: welcome.php");
         exit();
@@ -27,20 +38,21 @@ if (isset($_POST['login'])) {
     }
 }
 
-// SIGNUP FORM PROCESSING
+// SIGNUP
 if (isset($_POST['signup'])) {
     $username = $_POST['signup_username'];
     $password = md5($_POST['signup_password']);
 
-    // Check if user already exists
-    $check = "SELECT * FROM users WHERE username='$username'";
-    $result = $conn->query($check);
+    $check = "SELECT * FROM users WHERE username=?";
+    $stmt = sqlsrv_query($conn, $check, array($username));
 
-    if ($result && $result->num_rows > 0) {
+    if ($stmt && sqlsrv_has_rows($stmt)) {
         $signup_msg = "Username already exists!";
     } else {
-        $insert = "INSERT INTO users (username, password) VALUES ('$username', '$password')";
-        if ($conn->query($insert)) {
+        $insert = "INSERT INTO users (username, password) VALUES (?, ?)";
+        $params = array($username, $password);
+        $stmt = sqlsrv_query($conn, $insert, $params);
+        if ($stmt) {
             $signup_msg = "Signup successful! Please login.";
         } else {
             $signup_msg = "Error during signup.";
@@ -48,6 +60,7 @@ if (isset($_POST['signup'])) {
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html>
