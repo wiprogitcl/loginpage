@@ -3,7 +3,7 @@ session_start();
 
 $serverName = "tcp:mydemosvraz.database.windows.net,1433";
 $connectionOptions = array(
-    "Database" => "wiproadmin",
+    "Database" => "mydemodb@mydemosvraz",
     "Uid" => "wiproadmin",
     "PWD" => "Server@1",
     "Encrypt" => true,
